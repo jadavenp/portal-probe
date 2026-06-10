@@ -56,5 +56,11 @@ else
   if [ "$status" = "DOWN" ]; then
     send "🟢 portal-probe (off-tailnet): public portal recovered" && echo OK > "$STATUS_F"
   fi
+  # Weekly Monday heartbeat — proves the cron is still firing (GH can stop
+  # schedules silently; silence otherwise looks identical to "all green").
+  HB_F="$SD/heartbeat"
+  if [ "$(date -u +%u)" = "1" ] && [ $((now - $(cat "$HB_F" 2>/dev/null || echo 0))) -ge 432000 ]; then
+    send "💓 portal-probe (off-tailnet): alive — checks green" && echo "$now" > "$HB_F"
+  fi
   echo OK
 fi
