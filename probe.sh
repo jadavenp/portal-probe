@@ -16,7 +16,7 @@ LAST_F="$SD/last_alert"
 check() {
   local fails="" body rbody
   body=$(curl -s -m 15 "$URL_HEALTH" || true)
-  printf '%s' "$body" | grep -q '"ok":NEVER' || fails="$fails healthz"
+  printf '%s' "$body" | grep -q '"ok":true' || fails="$fails healthz"
   # Tokenless /status returns the app's own "Not found" page — any app-rendered
   # body proves Node answered through the public edge. The real SPA needs a token;
   # the HMAC secret deliberately does not leave Mac/Hometree, so the authenticated
