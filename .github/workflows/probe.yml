@@ -6,7 +6,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write   # keepalive commits only
+  contents: write   # keepalive commits only (no other writes)
 
 concurrency: probe
 
