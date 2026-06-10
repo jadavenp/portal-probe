@@ -1,0 +1,46 @@
+name: portal-probe
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # GH cron can drift several minutes; accepted
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # keepalive commits only
+
+concurrency: probe
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cross-run alert state (DOWN/OK + last-alert time). Cache keys are
+      # immutable, so each run saves a fresh key and restores the newest.
+      - uses: actions/cache@v4
+        with:
+          path: state
+          key: probe-state-${{ github.run_id }}
+          restore-keys: |
+            probe-state-
+
+      - name: probe
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: bash probe.sh
+
+      # GitHub suspends scheduled workflows after ~60 days without repo activity —
+      # a silent death for a monitor. Empty-commit before that window closes.
+      - name: keepalive
+        run: |
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          if [ $(( (now - last) / 86400 )) -ge 50 ]; then
+            git config user.name "portal-probe keepalive"
+            git config user.email "actions@users.noreply.github.com"
+            git commit --allow-empty -m "keepalive: prevent scheduled-workflow suspension"
+            git push
+          fi
