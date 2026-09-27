@@ -6,8 +6,8 @@
 # ~/Projects/scripts/portal_probe.sh.
 set -u
 
-URL_HEALTH="https://hometree.tail6d6eaa.ts.net/healthz"
-URL_ROUTE="https://hometree.tail6d6eaa.ts.net/status"
+URL_HEALTH="https://macmini.tail6d6eaa.ts.net:8443/healthz"
+URL_ROUTE="https://macmini.tail6d6eaa.ts.net:8443/status"
 SD=state
 mkdir -p "$SD"
 STATUS_F="$SD/status"
@@ -45,7 +45,7 @@ send() {
 if [ -n "$FAILS" ]; then
   if [ "$status" != "DOWN" ]; then
     # State flips only after Telegram confirms, so a Telegram blip can't eat the alert.
-    send "🔴 portal-probe (off-tailnet): PUBLIC portal DOWN —$FAILS — client-visible. If Jetson probe is green, restart the Tailscale service on Hometree first (funnel desync, tailscale#19508)." \
+    send "🔴 portal-probe (off-tailnet): PUBLIC portal DOWN —$FAILS — client-visible. If Jetson probe is green, restart tailscaled on the Mini first: sudo launchctl kickstart -k system/com.tailscale.tailscaled (funnel desync, tailscale#19508)." \
       && { echo DOWN > "$STATUS_F"; echo "$now" > "$LAST_F"; }
   elif [ $((now - last)) -ge 1800 ]; then
     send "🔴 portal-probe (off-tailnet): still down —$FAILS" && echo "$now" > "$LAST_F"
